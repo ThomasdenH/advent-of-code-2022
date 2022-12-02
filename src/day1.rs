@@ -1,42 +1,41 @@
-pub fn parse_numbers(s: &str) -> impl Iterator<Item = Option<usize>> + '_ {
-    let mut iter = s.as_bytes().iter().copied();
-    std::iter::from_fn(move || {
-        iter.next().map(|b| {
-            if b == b'\n' {
-                None
-            } else {
-                Some(
-                    (&mut iter)
-                        .take_while(|b| *b != b'\n')
-                        .fold(usize::from(b - b'0'), |acc, digit| {
-                            acc * 10 + usize::from(digit - b'0')
-                        }),
-                )
-            }
+/// Parse a number from an iterator, up to the first newline. Returns `None` if
+/// no digits are found.
+fn parse_number(it: &mut impl Iterator<Item = u8>) -> Option<usize> {
+    // Read until the first newline
+    it.take_while(|b| *b != b'\n')
+        // Fold, using `None` in case there are no digits.
+        .fold(None, |acc, digit| {
+            Some(acc.unwrap_or(0) * 10 + usize::from(digit - b'0'))
         })
+}
+
+/// Parse all numbers from input.
+fn parse_numbers(s: &str) -> impl Iterator<Item = Option<usize>> + '_ {
+    let mut iter = s.as_bytes().iter().copied().peekable();
+    std::iter::from_fn(move || {
+        if iter.peek().is_some() {
+            Some(parse_number(&mut iter))
+        } else {
+            None
+        }
     })
 }
 
+fn totals(s: &str) -> impl Iterator<Item = usize> + '_ {
+    let mut numbers = parse_numbers(s);
+    std::iter::from_fn(move ||
+        // Take numbers up to the first `None`, unwrap Option
+        (&mut numbers).map_while(|b| b)
+        // Sum, returning None if there were no numbers
+        .fold(None, |acc, d| Some(acc.unwrap_or_default() + d)))
+}
+
 pub fn part_1(input: &str) -> usize {
-    let numbers = parse_numbers(input);
-    let mut max = 0;
-    let mut current = 0;
-    for d in numbers {
-        if let Some(a) = d {
-            current += a;
-        } else {
-            max = max.max(current);
-            current = 0;
-        }
-    }
-    max
+    totals(input).max().unwrap_or_default()
 }
 
 pub fn part_2(input: &str) -> usize {
-    let mut numbers = parse_numbers(input);
-    // Take sum of numbers up to `None`
-    std::iter::from_fn(|| numbers.next()
-        .map(|first_number| first_number + (&mut numbers).take_while(|b| b).sum()))
+    totals(input)
         .fold([0usize; 3], |mut acc: [usize; 3], mut new| {
             for max in acc.iter_mut() {
                 if new > *max {
@@ -85,4 +84,16 @@ fn test_example_part_2() {
 
 10000";
     assert_eq!(part_2(input), 45000);
+}
+
+#[test]
+fn test_part_1() {
+    let input = include_str!("../input/2022/day1.txt");
+    assert_eq!(part_1(input), 70374);
+}
+
+#[test]
+fn test_part_2() {
+    let input = include_str!("../input/2022/day1.txt");
+    assert_eq!(part_2(input), 204610);
 }

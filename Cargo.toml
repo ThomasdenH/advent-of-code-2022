@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-aoc-main = { git="https://github.com/remi-dupre/aoc.git" }
+aoc-main = { version="0.4.1", features = ["bench"]}
 
 [profile.release]
 lto = true
