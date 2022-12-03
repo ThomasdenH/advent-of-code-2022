@@ -35,7 +35,8 @@ impl Play {
             1
         } else {
             chosen
-        }.wrapping_add(win_lose_draw.wrapping_mul(3))
+        }
+        .wrapping_add(win_lose_draw.wrapping_mul(3))
     }
 
     #[cfg(test)]
@@ -55,7 +56,10 @@ pub fn part_1(input: &str) -> usize {
 }
 
 pub fn part_2(input: &str) -> usize {
-    plays(input).map(|a| a.points_part_2()).map(usize::from).sum()
+    plays(input)
+        .map(|a| a.points_part_2())
+        .map(usize::from)
+        .sum()
 }
 
 #[test]
