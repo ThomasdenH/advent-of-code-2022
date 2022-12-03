@@ -1,7 +1,19 @@
+use std::u8;
+
 fn letter_score(letter: u8) -> usize {
     usize::from(letter & 0b0001_1111) +
         // Check if uppercase or lowercase
         if (letter & 0b0010_0000) != 0 { 0 } else { 26 }
+}
+
+fn bag_fingerprint(line: &[u8]) -> u64 {
+    line.iter().fold(0, |fingerprint, &item| {
+        fingerprint | (1 << (item & 0b0011_1111))
+    })
+}
+
+fn to_letter(fingerprint: u64) -> u8 {
+    fingerprint.trailing_zeros() as u8
 }
 
 pub fn part_1(input: &str) -> usize {
@@ -14,44 +26,26 @@ pub fn part_1(input: &str) -> usize {
         .map(|line| line.split_at(line.len() / 2))
         // Find duplicates in both parts
         .map(|(compartment_1, compartment_2)| {
-            // Mark which have been seen
-            let mut seen_in_first_compartment = [false; 256];
-            for &item in compartment_1.iter() {
-                seen_in_first_compartment[usize::from(item)] = true;
-            }
-            for &item in compartment_2.iter() {
-                if seen_in_first_compartment[usize::from(item)] {
-                    return letter_score(item);
-                }
-            }
-            unreachable!()
+            bag_fingerprint(compartment_1) & bag_fingerprint(compartment_2)
         })
+        .map(to_letter)
+        .map(letter_score)
         .sum()
 }
 
-const FIRST_COMPARTMENT: u8 = 0b1;
-const SECOND_COMPARTMENT: u8 = 0b10;
 pub fn part_2(input: &str) -> usize {
     input
         .split_terminator('\n')
         .map(str::as_bytes)
         .array_chunks::<3>()
-        .map(|[compartment_1, compartment_2, compartment_3]| {
-            // Mark which have been seen
-            let mut seen_in_compartment = [0u8; u8::MAX as usize];
-            for &i in compartment_1.iter() {
-                seen_in_compartment[usize::from(i)] = FIRST_COMPARTMENT;
-            }
-            for &i in compartment_2.iter() {
-                seen_in_compartment[usize::from(i)] |= SECOND_COMPARTMENT;
-            }
-            for &i in compartment_3.iter() {
-                if seen_in_compartment[usize::from(i)] == FIRST_COMPARTMENT | SECOND_COMPARTMENT {
-                    return letter_score(i);
-                }
-            }
-            unreachable!()
+        .map(|arr| {
+            arr.into_iter()
+                .map(bag_fingerprint)
+                .reduce(|acc, new| acc & new)
+                .unwrap_or(0)
         })
+        .map(to_letter)
+        .map(letter_score)
         .sum()
 }
 
