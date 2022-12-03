@@ -2,7 +2,7 @@
 struct Play([u8; 2]);
 
 impl Play {
-    fn points(&self) -> u8 {
+    const fn points(&self) -> u8 {
         const DIFF: u8 = b'A'
             .wrapping_sub(b'X')
             .wrapping_add(1)
@@ -24,6 +24,7 @@ impl Play {
         }
     }
 
+    #[cfg(test)]
     fn points_explicit(&self) -> u8 {
         let [a, b] = self.0;
         let points = ((b - b'X') + 10 - (a - b'A')) % 3;
@@ -73,4 +74,10 @@ fn test_example_part_1() {
 B X
 C Z";
     assert_eq!(plays(input).map(|play| play.points()).sum::<u8>(), 15u8);
+}
+
+#[test]
+fn test_part_1() {
+    let input = include_str!("../input/2022/day2.txt");
+    assert_eq!(part_1(input), 10816);
 }
