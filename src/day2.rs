@@ -107,3 +107,9 @@ fn test_part_1() {
     let input = include_str!("../input/2022/day2.txt");
     assert_eq!(part_1(input), 10816);
 }
+
+#[test]
+fn test_part_2() {
+    let input = include_str!("../input/2022/day2.txt");
+    assert_eq!(part_2(input), 11657);
+}
