@@ -2,10 +2,10 @@
 /// no digits are found.
 fn parse_number(it: &mut impl Iterator<Item = u8>) -> Option<usize> {
     // Read until the first newline
-    let mut iter = it.take_while(|b| *b != b'\n');
+    let mut iter = it.take_while(|b| (*b & 0b0100_0000) == 0);
     iter.next().map(|b| {
-        iter.fold(usize::from(b - b'0'), |acc, d| {
-            acc * 10 + usize::from(d - b'0')
+        iter.fold(usize::from(b & 0b1111), |acc, d| {
+            acc * 10 + usize::from(d & 0b1111)
         })
     })
 }
