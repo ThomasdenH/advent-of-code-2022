@@ -24,6 +24,20 @@ impl Play {
         }
     }
 
+    const fn points_part_2(&self) -> u8 {
+        let [a, b] = self.0;
+        // 0 for lose, 1 for draw, 2 for win
+        let win_lose_draw = 0b0000_0011 & b;
+        let chosen = a.wrapping_sub(b'A').wrapping_add(win_lose_draw);
+        if chosen <= 0 {
+            3
+        } else if chosen > 3 {
+            1
+        } else {
+            chosen
+        }.wrapping_add(win_lose_draw.wrapping_mul(3))
+    }
+
     #[cfg(test)]
     fn points_explicit(&self) -> u8 {
         let [a, b] = self.0;
@@ -38,6 +52,10 @@ fn plays(input: &str) -> impl Iterator<Item = Play> + '_ {
 
 pub fn part_1(input: &str) -> usize {
     plays(input).map(|a| a.points()).map(usize::from).sum()
+}
+
+pub fn part_2(input: &str) -> usize {
+    plays(input).map(|a| a.points_part_2()).map(usize::from).sum()
 }
 
 #[test]
@@ -70,6 +88,14 @@ fn test_points() {
 
 #[test]
 fn test_example_part_1() {
+    let input = "A Y
+B X
+C Z";
+    assert_eq!(part_2(input), 12);
+}
+
+#[test]
+fn test_example_part_2() {
     let input = "A Y
 B X
 C Z";
