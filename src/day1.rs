@@ -5,7 +5,7 @@ fn parse_number(it: &mut impl Iterator<Item = u8>) -> Option<usize> {
     it.take_while(|b| *b != b'\n')
         // Fold, using `None` in case there are no digits.
         .fold(None, |acc, digit| {
-            Some(acc.unwrap_or(0) * 10 + usize::from(digit - b'0'))
+            Some(acc.unwrap_or_default() * 10 + usize::from(digit) - usize::from(b'0'))
         })
 }
 
@@ -30,13 +30,9 @@ fn totals(s: &str) -> impl Iterator<Item = usize> + '_ {
         .fold(None, |acc, d| Some(acc.unwrap_or_default() + d)))
 }
 
-pub fn part_1(input: &str) -> usize {
-    totals(input).max().unwrap_or_default()
-}
-
-pub fn part_2(input: &str) -> usize {
+fn sum_of_max<const AMOUNT: usize>(input: &str) -> usize {
     totals(input)
-        .fold([0usize; 3], |mut acc: [usize; 3], mut new| {
+        .fold([0usize; AMOUNT], |mut acc: [usize; AMOUNT], mut new| {
             for max in acc.iter_mut() {
                 if new > *max {
                     std::mem::swap(&mut new, max)
@@ -46,6 +42,14 @@ pub fn part_2(input: &str) -> usize {
         })
         .iter()
         .sum()
+}
+
+pub fn part_1(input: &str) -> usize {
+    sum_of_max::<1>(input)
+}
+
+pub fn part_2(input: &str) -> usize {
+    sum_of_max::<3>(input)
 }
 
 #[test]
