@@ -1,4 +1,4 @@
-use std::{cmp::Ordering};
+use std::cmp::Ordering;
 
 #[derive(Debug)]
 struct Range(u8, u8);
@@ -7,7 +7,7 @@ fn one_or_two_digits_to_number(s: &str) -> u8 {
     match s.as_bytes() {
         &[a] => a & 0b1111,
         &[a, b] => (a << 4) | (b & 0b1111),
-        _ => unreachable!()
+        _ => unreachable!(),
     }
 }
 
@@ -25,7 +25,7 @@ impl Range {
         match (self.0.cmp(&other.0), self.1.cmp(&other.1)) {
             (Ordering::Greater, Ordering::Greater) => false,
             (Ordering::Less, Ordering::Less) => false,
-            _ => true
+            _ => true,
         }
     }
 
