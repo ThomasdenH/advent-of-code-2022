@@ -108,7 +108,9 @@ pub fn part_2(s: &str) -> PrintableArray<9> {
     solve_generic::<9, false>(s)
 }
 
-pub fn solve_generic<const STACKS: usize, const CHANGE_ORDER: bool>(s: &str) -> PrintableArray<STACKS> {
+pub fn solve_generic<const STACKS: usize, const CHANGE_ORDER: bool>(
+    s: &str,
+) -> PrintableArray<STACKS> {
     let mut lines = s.split_terminator('\n').map(str::as_bytes);
     let mut warehouse = Warehouse::<STACKS>::parse(&mut lines);
     for line in lines.skip(1) {
