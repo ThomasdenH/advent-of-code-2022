@@ -1,6 +1,6 @@
-fn all_distinct(window: &[u8]) -> bool {
-    for i in 0..window.len() {
-        for j in (i+1)..window.len() {
+fn all_distinct<const SIZE: usize>(window: &[u8; SIZE]) -> bool {
+    for i in 0..SIZE {
+        for j in (i + 1)..SIZE {
             if window[i] == window[j] {
                 return false;
             }
@@ -9,24 +9,23 @@ fn all_distinct(window: &[u8]) -> bool {
     true
 }
 
-fn find_marker(s: &str, size: usize) -> usize {
+fn find_marker<const SIZE: usize>(s: &str) -> usize {
     s.as_bytes()
-        .windows(size)
+        .array_windows::<SIZE>()
         .enumerate()
-        .filter(|(_, window)| {
-            all_distinct(window)
-        })
+        .filter(|(_, window)| all_distinct(window))
         .next()
         .unwrap()
-        .0 + size
+        .0
+        + SIZE
 }
 
 pub fn part_1(s: &str) -> usize {
-    find_marker(s, 4)
+    find_marker::<4>(s)
 }
 
 pub fn part_2(s: &str) -> usize {
-    find_marker(s, 14)
+    find_marker::<14>(s)
 }
 
 #[test]
@@ -50,4 +49,16 @@ fn test_part_2_example() {
     assert_eq!(part_2("nppdvjthqldpwncqszvftbrmjlhg"), 23);
     assert_eq!(part_2("nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg"), 29);
     assert_eq!(part_2("zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw"), 26);
+}
+
+#[test]
+fn test_part_1() {
+    let input = include_str!("../input/2022/day6.txt");
+    assert_eq!(part_1(input), 1804);
+}
+
+#[test]
+fn test_part_2() {
+    let input = include_str!("../input/2022/day6.txt");
+    assert_eq!(part_2(input), 2508);
 }

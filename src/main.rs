@@ -1,5 +1,6 @@
 #![feature(iter_array_chunks)]
 #![feature(iter_advance_by)]
+#![feature(array_windows)]
 
 mod day1;
 mod day2;
@@ -7,6 +8,7 @@ mod day3;
 mod day4;
 mod day5;
 mod day6;
+mod day7;
 
 aoc_main::main! {
     year 2022;
@@ -16,4 +18,5 @@ aoc_main::main! {
     day4 => part_1, part_2;
     day5 => part_1, part_2;
     day6 => part_1, part_2;
+    day7 => part_1, part_2;
 }
