@@ -9,6 +9,7 @@ mod day4;
 mod day5;
 mod day6;
 mod day7;
+mod day8;
 
 aoc_main::main! {
     year 2022;
@@ -19,4 +20,5 @@ aoc_main::main! {
     day5 => part_1, part_2;
     day6 => part_1, part_2;
     day7 => part_1, part_2;
+    day8 => part_1, part_2;
 }
