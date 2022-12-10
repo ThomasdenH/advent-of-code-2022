@@ -4,7 +4,7 @@ pub struct PrintableArray<const SIZE: usize>([u8; SIZE]);
 
 impl<const SIZE: usize> std::fmt::Display for PrintableArray<SIZE> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for c in self.0.into_iter() {
+        for c in self.0 {
             write!(f, "{}", char::from(c))?;
         }
         Ok(())
@@ -36,7 +36,7 @@ impl<const STACKS: usize> Warehouse<STACKS> {
         let mut warehouse = Warehouse([U256::zero(); STACKS]);
         for line in lines.take_while(|s| s[1] != b'1') {
             for (letter, dest) in line
-                .into_iter()
+                .iter()
                 .skip(1)
                 .step_by(4)
                 .map(|ascii| ascii & 0b1_1111)
@@ -128,7 +128,7 @@ pub fn solve_generic<const STACKS: usize, const CHANGE_ORDER: bool>(
     }
     let mut output = [0b0100_0000; STACKS];
     for (from, out) in output.iter_mut().enumerate() {
-        *out = *out | warehouse.pop_crate(from);
+        *out |= warehouse.pop_crate(from);
     }
     PrintableArray(output)
 }

@@ -70,7 +70,9 @@ pub fn part_1_generic<const WIDTH: usize, const HEIGHT: usize, const TOTAL_SIZE:
     marked.iter().filter(|b| **b).count()
 }
 
-pub fn part_2_generic<const WIDTH: usize, const HEIGHT: usize, const TOTAL_SIZE: usize>(s: &str) -> usize {
+pub fn part_2_generic<const WIDTH: usize, const HEIGHT: usize, const TOTAL_SIZE: usize>(
+    s: &str,
+) -> usize {
     let trees = s.as_bytes();
 
     // Set indexed like the trees.
@@ -78,14 +80,17 @@ pub fn part_2_generic<const WIDTH: usize, const HEIGHT: usize, const TOTAL_SIZE:
 
     let mut test_and_mark =
         |index: Index<WIDTH>,
-        iter_index: usize,
+         position_along_line: usize,
          last_encounter_of_tree_of_at_least_height: &mut [usize; 10]| {
             let tree = usize::from(trees[index.0] & 0b1111);
             // Compute the view
-            let view = iter_index - last_encounter_of_tree_of_at_least_height[tree];
+            let view = position_along_line - last_encounter_of_tree_of_at_least_height[tree];
             scenic_score[index.0] *= view;
-            for height in 0..=tree {
-                last_encounter_of_tree_of_at_least_height[height] = iter_index;
+            for last_encounter_of_tree in last_encounter_of_tree_of_at_least_height
+                .iter_mut()
+                .take(tree + 1)
+            {
+                *last_encounter_of_tree = position_along_line;
             }
         };
 
@@ -93,20 +98,13 @@ pub fn part_2_generic<const WIDTH: usize, const HEIGHT: usize, const TOTAL_SIZE:
         let mut index = Index::from_coords(x, 0);
         let mut last_encounter_of_tree_of_at_least_height = [0; 10];
         for y in 0..HEIGHT {
-            test_and_mark(
-                index,
-                y,
-                &mut last_encounter_of_tree_of_at_least_height,
-            );
+            test_and_mark(index, y, &mut last_encounter_of_tree_of_at_least_height);
             index.move_down();
         }
         let mut last_encounter_of_tree_of_at_least_height = [0; 10];
         for y in 0..HEIGHT {
             index.move_up();
-            test_and_mark(
-                index, y,
-                &mut last_encounter_of_tree_of_at_least_height,
-            );
+            test_and_mark(index, y, &mut last_encounter_of_tree_of_at_least_height);
         }
     }
 
@@ -114,20 +112,13 @@ pub fn part_2_generic<const WIDTH: usize, const HEIGHT: usize, const TOTAL_SIZE:
         let mut index = Index::from_coords(0, y);
         let mut last_encounter_of_tree_of_at_least_height = [0; 10];
         for x in 0..WIDTH {
-            test_and_mark(
-                index, x, 
-                &mut last_encounter_of_tree_of_at_least_height,
-            );
+            test_and_mark(index, x, &mut last_encounter_of_tree_of_at_least_height);
             index.move_right();
         }
         let mut last_encounter_of_tree_of_at_least_height = [0; 10];
         for x in 0..WIDTH {
             index.move_left();
-            test_and_mark(
-                index,
-                x,
-                &mut last_encounter_of_tree_of_at_least_height,
-            );
+            test_and_mark(index, x, &mut last_encounter_of_tree_of_at_least_height);
         }
     }
     scenic_score.iter().copied().max().unwrap_or_default()

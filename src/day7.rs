@@ -10,11 +10,11 @@ impl<'a> Path<'a> {
         self.0.pop();
     }
 
-    fn to_root(&mut self) {
+    fn go_to_root(&mut self) {
         self.0.clear();
     }
 
-    fn to_subdir(&mut self, subdir: &'a [u8]) {
+    fn go_to_subdir(&mut self, subdir: &'a [u8]) {
         self.0.push(subdir);
     }
 }
@@ -62,9 +62,9 @@ impl<'a> FileTree<'a> {
                         // ..
                         current_path.go_up();
                     } else if line[5] == b'/' {
-                        current_path.to_root();
+                        current_path.go_to_root();
                     } else {
-                        current_path.to_subdir(&line[5..]);
+                        current_path.go_to_subdir(&line[5..]);
                     }
                 } else if line[2] == b'l' {
                     // $ ls
@@ -99,7 +99,7 @@ impl<'a> FileTree<'a> {
             total_size: dirinfo.size,
         };
         for subdirectory in &dirinfo.subdirs {
-            path.to_subdir(subdirectory);
+            path.go_to_subdir(subdirectory);
             let subdir_size_info = self.subdirectory_size_info(path);
             size_info.total_size += subdir_size_info.total_size;
             size_info.sum_of_small_subdirectory_sizes +=
@@ -126,7 +126,7 @@ impl<'a> FileTree<'a> {
         let mut size_current_directory = dirinfo.size;
         let mut smallest_subdir_size_above_threshold: Option<usize> = None;
         for subdir in &dirinfo.subdirs {
-            path.to_subdir(subdir);
+            path.go_to_subdir(subdir);
             size_current_directory += self.subdirectory_size_info(path).total_size;
             smallest_subdir_size_above_threshold = match (
                 smallest_subdir_size_above_threshold,
@@ -138,7 +138,7 @@ impl<'a> FileTree<'a> {
             };
             path.go_up();
         }
-        smallest_subdir_size_above_threshold.or_else(|| {
+        smallest_subdir_size_above_threshold.or({
             if size_current_directory > threshold {
                 Some(size_current_directory)
             } else {

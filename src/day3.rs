@@ -3,7 +3,7 @@ use std::u8;
 fn letter_score(letter: u8) -> usize {
     usize::from(letter & 0b0001_1111) +
         // Check if uppercase or lowercase
-        if (letter & 0b0010_0000) != 0 { 0 } else { 26 }
+        if (letter & 0b0010_0000) == 0 { 26 } else { 0 }
 }
 
 fn bag_fingerprint(line: &[u8]) -> u64 {

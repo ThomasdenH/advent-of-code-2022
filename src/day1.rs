@@ -36,7 +36,7 @@ fn sum_of_max<const AMOUNT: usize>(input: &str) -> usize {
         .fold([0usize; AMOUNT], |mut acc: [usize; AMOUNT], mut new| {
             for max in acc.iter_mut() {
                 if new > *max {
-                    std::mem::swap(&mut new, max)
+                    std::mem::swap(&mut new, max);
                 }
             }
             acc

@@ -13,8 +13,7 @@ fn find_marker<const SIZE: usize>(s: &str) -> usize {
     s.as_bytes()
         .array_windows::<SIZE>()
         .enumerate()
-        .filter(|(_, window)| all_distinct(window))
-        .next()
+        .find(|(_, window)| all_distinct(window))
         .unwrap()
         .0
         + SIZE

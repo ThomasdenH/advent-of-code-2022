@@ -4,9 +4,9 @@ use std::cmp::Ordering;
 struct Range(u8, u8);
 
 fn one_or_two_digits_to_number(s: &str) -> u8 {
-    match s.as_bytes() {
-        &[a] => a & 0b1111,
-        &[a, b] => (a << 4) | (b & 0b1111),
+    match *s.as_bytes() {
+        [a] => a & 0b1111,
+        [a, b] => (a << 4) | (b & 0b1111),
         _ => unreachable!(),
     }
 }
@@ -21,12 +21,11 @@ impl Range {
     }
 
     fn contains_or_is_contained_by(&self, other: &Range) -> bool {
-        // True, except if both are equal and not both zero
-        match (self.0.cmp(&other.0), self.1.cmp(&other.1)) {
-            (Ordering::Greater, Ordering::Greater) => false,
-            (Ordering::Less, Ordering::Less) => false,
-            _ => true,
-        }
+        // True, except if both are greater or less.
+        !matches!(
+            (self.0.cmp(&other.0), self.1.cmp(&other.1)),
+            (Ordering::Greater, Ordering::Greater) | (Ordering::Less, Ordering::Less)
+        )
     }
 
     fn overlaps_with(&self, other: &Range) -> bool {

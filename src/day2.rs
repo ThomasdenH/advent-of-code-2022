@@ -2,7 +2,7 @@
 struct Play([u8; 2]);
 
 impl Play {
-    const fn points(&self) -> u8 {
+    const fn points(self) -> u8 {
         const DIFF: u8 = b'A'
             .wrapping_sub(b'X')
             .wrapping_add(1)
@@ -24,12 +24,12 @@ impl Play {
         }
     }
 
-    const fn points_part_2(&self) -> u8 {
+    const fn points_part_2(self) -> u8 {
         let [a, b] = self.0;
         // 0 for lose, 1 for draw, 2 for win
         let win_lose_draw = 0b0000_0011 & b;
         let chosen = a.wrapping_sub(b'A').wrapping_add(win_lose_draw);
-        if chosen <= 0 {
+        if chosen == 0 {
             3
         } else if chosen > 3 {
             1
@@ -48,18 +48,15 @@ impl Play {
 }
 
 fn plays(input: &str) -> impl Iterator<Item = Play> + '_ {
-    input.bytes().step_by(2).array_chunks().map(|arr| Play(arr))
+    input.bytes().step_by(2).array_chunks().map(Play)
 }
 
 pub fn part_1(input: &str) -> usize {
-    plays(input).map(|a| a.points()).map(usize::from).sum()
+    plays(input).map(Play::points).map(usize::from).sum()
 }
 
 pub fn part_2(input: &str) -> usize {
-    plays(input)
-        .map(|a| a.points_part_2())
-        .map(usize::from)
-        .sum()
+    plays(input).map(Play::points_part_2).map(usize::from).sum()
 }
 
 #[test]
