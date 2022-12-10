@@ -10,14 +10,12 @@ struct RopePartPosition {
 impl RopePartPosition {
     /// Move this rope part towards the parent.
     fn move_towards_parent(&mut self, parent: &mut RopePartPosition) {
-        // Map:
-        // * 0, 1, -1 -> 0
-        // * -2 -> -1
-        // * 2 -> 1
-        let mut dx = parent.horizontal_diff.signum();
-        let mut dy = parent.vertical_diff.signum();
+        let dx = parent.horizontal_diff.signum();
+        let dy = parent.vertical_diff.signum();
+        // If the parent is adjacent or at the same location, the `signum()` of
+        // the coords will be the same as the relative position. Otherwise,
+        // move the rope by the signum.
         if dx != parent.horizontal_diff || dy != parent.vertical_diff {
-            // Too much distance, so move rope
             self.move_by_delta((dx, dy));
             parent.move_by_delta((-dx, -dy));
         }
@@ -118,7 +116,7 @@ pub fn simulate_rope<const LENGTH: usize>(s: &str) -> usize {
     let mut positions = HashSet::new();
     let mut rope = Rope::<LENGTH>::default();
     for (direction, distance) in parse_instructions(s) {
-        for i in 0..distance {
+        for _ in 0..distance {
             rope.move_in_direction(direction);
             positions.insert(rope.tail_position());
         }
