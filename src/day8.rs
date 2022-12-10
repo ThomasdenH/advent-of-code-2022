@@ -1,4 +1,6 @@
-pub fn part_1_generic<const WIDTH: usize, const HEIGHT: usize, const TOTAL_SIZE: usize>(s: &str) -> usize {
+pub fn part_1_generic<const WIDTH: usize, const HEIGHT: usize, const TOTAL_SIZE: usize>(
+    s: &str,
+) -> usize {
     let trees = s.as_bytes();
     assert!(trees.len() >= WIDTH * HEIGHT);
     debug_assert!(TOTAL_SIZE == (WIDTH + 1) * HEIGHT);
@@ -41,7 +43,7 @@ enum Direction {
     IncreasingY,
     IncreasingX,
     DecreasingY,
-    DecreasingX
+    DecreasingX,
 }
 
 use Direction::*;
@@ -54,40 +56,64 @@ pub fn part_2_generic<const WIDTH: u8, const HEIGHT: u8, const TOTAL_SIZE: usize
     // Set Indexed as x + y * (WIDTH + 1), and then through direction.
     let mut scenic_score = [1u32; TOTAL_SIZE];
 
-    let mut test_and_mark = |x: u8, y: u8, direction: Direction, last_encounter_of_tree_of_at_least_height: &mut [u8; 10]| {
-        let idx = to_index(x, y);
-        let tree = usize::from(trees[idx] & 0b1111);
-        let (view, direction_coordinate) = match direction {
-            DecreasingX => (last_encounter_of_tree_of_at_least_height[tree] - x, x),
-            IncreasingX => (x - last_encounter_of_tree_of_at_least_height[tree], x),
-            DecreasingY => (last_encounter_of_tree_of_at_least_height[tree] - y, y),
-            IncreasingY => (y - last_encounter_of_tree_of_at_least_height[tree], y),
+    let mut test_and_mark =
+        |x: u8,
+         y: u8,
+         direction: Direction,
+         last_encounter_of_tree_of_at_least_height: &mut [u8; 10]| {
+            let idx = to_index(x, y);
+            let tree = usize::from(trees[idx] & 0b1111);
+            let (view, direction_coordinate) = match direction {
+                DecreasingX => (last_encounter_of_tree_of_at_least_height[tree] - x, x),
+                IncreasingX => (x - last_encounter_of_tree_of_at_least_height[tree], x),
+                DecreasingY => (last_encounter_of_tree_of_at_least_height[tree] - y, y),
+                IncreasingY => (y - last_encounter_of_tree_of_at_least_height[tree], y),
+            };
+            scenic_score[idx] *= u32::from(view);
+            for height in 0..=tree {
+                last_encounter_of_tree_of_at_least_height[height] = direction_coordinate;
+            }
         };
-        scenic_score[idx] *= u32::from(view);
-        for height in 0..=tree {
-            last_encounter_of_tree_of_at_least_height[height] = direction_coordinate;
-        }
-    };
 
     for x in 0..WIDTH {
         let mut last_encounter_of_tree_of_at_least_height = [0; 10];
         for y in (0..HEIGHT).rev() {
-            test_and_mark(x, y, DecreasingY, &mut last_encounter_of_tree_of_at_least_height);
+            test_and_mark(
+                x,
+                y,
+                DecreasingY,
+                &mut last_encounter_of_tree_of_at_least_height,
+            );
         }
         let mut last_encounter_of_tree_of_at_least_height = [0; 10];
         for y in 0..HEIGHT {
-            test_and_mark(x, y, IncreasingY, &mut last_encounter_of_tree_of_at_least_height);
+            test_and_mark(
+                x,
+                y,
+                IncreasingY,
+                &mut last_encounter_of_tree_of_at_least_height,
+            );
         }
     }
 
     for y in 0..HEIGHT {
         let mut last_encounter_of_tree_of_at_least_height = [0; 10];
         for x in 0..WIDTH {
-            test_and_mark(x, y, IncreasingX, &mut last_encounter_of_tree_of_at_least_height);
+            test_and_mark(
+                x,
+                y,
+                IncreasingX,
+                &mut last_encounter_of_tree_of_at_least_height,
+            );
         }
         let mut last_encounter_of_tree_of_at_least_height = [0; 10];
         for x in (0..WIDTH).rev() {
-            test_and_mark(x, y, DecreasingX, &mut last_encounter_of_tree_of_at_least_height);
+            test_and_mark(
+                x,
+                y,
+                DecreasingX,
+                &mut last_encounter_of_tree_of_at_least_height,
+            );
         }
     }
     scenic_score.iter().copied().max().unwrap_or_default()

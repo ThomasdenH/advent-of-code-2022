@@ -1,67 +1,76 @@
 use std::collections::HashSet;
 
-#[derive(Default, Hash, Eq, PartialEq, Copy, Clone, Debug)]
-struct TailPosition(i16, i16);
-
-impl TailPosition {
-    fn move_to_head(&mut self, head_position: &mut HeadPosition, direction: Direction) {
-        match direction {
-            Direction::Down => {
-                if head_position.vertical_diff == -1 {
-                    // The head is already one down, so move the tail down.
-                    // ...T... -> .......
-                    // ...H... -> ...T...
-                    // ....... -> ...H...
-                    self.1 = self.1.wrapping_sub(1);
-                    // If there is a horizontal difference, correct it.
-                    // ..T.... -> .......
-                    // ...H... -> ...T...
-                    // ....... -> ...H...
-                    self.0 = self.0.wrapping_add(head_position.horizontal_diff);
-                    head_position.horizontal_diff = 0;
-                } else {
-                    head_position.vertical_diff = head_position.vertical_diff.wrapping_sub(1);
-                }
-            }
-            Direction::Up => {
-                if head_position.vertical_diff == 1 {
-                    self.1 = self.1.wrapping_add(1);
-                    self.0 = self.0.wrapping_add(head_position.horizontal_diff);
-                    head_position.horizontal_diff = 0;
-                } else {
-                    head_position.vertical_diff = head_position.vertical_diff.wrapping_add(1);
-                }
-            }
-            Direction::Left => {
-                if head_position.horizontal_diff == -1 {
-                    self.0 = self.0.wrapping_sub(1);
-                    self.1 = self.1.wrapping_add(head_position.vertical_diff);
-                    head_position.vertical_diff = 0;
-                } else {
-                    head_position.horizontal_diff = head_position.horizontal_diff.wrapping_sub(1);
-                }
-            }
-            Direction::Right => {
-                if head_position.horizontal_diff == 1 {
-                    self.0 = self.0.wrapping_add(1);
-                    self.1 = self.1.wrapping_add(head_position.vertical_diff);
-                    head_position.vertical_diff = 0;
-                } else {
-                    head_position.horizontal_diff = head_position.horizontal_diff.wrapping_add(1);
-                }
-            }
-        }
-    }
-}
-
-/// Denotes the head position relative to the tail.
-#[derive(Default, Copy, Clone, Debug)]
-struct HeadPosition {
+/// Denotes the relative position of the leading part of the rope.
+#[derive(Default, Copy, Clone, Debug, Hash, Eq, PartialEq)]
+struct RopePartPosition {
     horizontal_diff: i16,
     vertical_diff: i16,
 }
 
-#[derive(Copy, Clone)]
+impl RopePartPosition {
+    /// Move this rope part towards the parent.
+    fn move_towards_parent(&mut self, parent: &mut RopePartPosition) {
+        // Map:
+        // * 0, 1, -1 -> 0
+        // * -2 -> -1
+        // * 2 -> 1
+        let mut dx = parent.horizontal_diff.signum();
+        let mut dy = parent.vertical_diff.signum();
+        if dx != parent.horizontal_diff || dy != parent.vertical_diff {
+            // Too much distance, so move rope
+            self.move_by_delta((dx, dy));
+            parent.move_by_delta((-dx, -dy));
+        }
+    }
+
+    /// Move this rope part by the provided amount.
+    fn move_by_delta(&mut self, (dx, dy): (i16, i16)) {
+        self.horizontal_diff += dx;
+        self.vertical_diff += dy;
+    }
+
+    /// Move this rope one step in the given direction.
+    fn move_in_direction(&mut self, direction: Direction) {
+        match direction {
+            Direction::Down => self.move_by_delta((0, -1)),
+            Direction::Up => self.move_by_delta((0, 1)),
+            Direction::Left => self.move_by_delta((-1, 0)),
+            Direction::Right => self.move_by_delta((1, 0)),
+        }
+    }
+}
+
+/// A rope. The positions are of the head towards the tail. Except for the tail,
+/// all positions are relative to their child.
+struct Rope<const LENGTH: usize>([RopePartPosition; LENGTH]);
+
+impl<const LENGTH: usize> Default for Rope<LENGTH> {
+    fn default() -> Self {
+        Rope([RopePartPosition::default(); LENGTH])
+    }
+}
+
+impl<const LENGTH: usize> Rope<LENGTH> {
+    /// Move this rope one step in the right direction.
+    fn move_in_direction(&mut self, direction: Direction) {
+        // Move the head in the right direction.
+        self.0[0].move_in_direction(direction);
+        // All other parts should follow
+        for i in 1..LENGTH {
+            let (a, b) = self.0.split_at_mut(i);
+            let parent = a.last_mut().unwrap();
+            let child = b.first_mut().unwrap();
+            child.move_towards_parent(parent);
+        }
+    }
+
+    fn tail_position(&self) -> RopePartPosition {
+        self.0[LENGTH - 1]
+    }
+}
+
+/// Grid direction.
+#[derive(Copy, Clone, Debug)]
 enum Direction {
     Up,
     Down,
@@ -88,6 +97,8 @@ fn parse_instructions(s: &str) -> impl Iterator<Item = (Direction, u8)> + '_ {
                 // Read first digit
                 let mut num = bytes.next().unwrap() & 0b1111;
                 if let Some(another_digit) = bytes.next() {
+                    // The next byte is either a new line, then do nothing,
+                    // or another (final) digit.
                     if *another_digit != b'\n' {
                         num *= 10;
                         num += another_digit & 0b1111;
@@ -100,19 +111,27 @@ fn parse_instructions(s: &str) -> impl Iterator<Item = (Direction, u8)> + '_ {
     })
 }
 
-pub fn part_1(s: &str) -> usize {
+pub fn simulate_rope<const LENGTH: usize>(s: &str) -> usize {
+    // If the rope is at least two long, we don't have to store the starting
+    // position since the tail won't move on the first iteration.
+    debug_assert!(LENGTH >= 2);
     let mut positions = HashSet::new();
-    let mut tail_position = TailPosition::default();
-    let mut relative_head_position = HeadPosition::default();
+    let mut rope = Rope::<LENGTH>::default();
     for (direction, distance) in parse_instructions(s) {
-        for _ in 0..distance {
-            debug_assert!(relative_head_position.vertical_diff.abs() <= 1 && relative_head_position.horizontal_diff.abs() <= 1);
-            positions.insert(tail_position);
-            tail_position.move_to_head(&mut relative_head_position, direction);
+        for i in 0..distance {
+            rope.move_in_direction(direction);
+            positions.insert(rope.tail_position());
         }
     }
-    positions.insert(tail_position);
     positions.len()
+}
+
+pub fn part_1(s: &str) -> usize {
+    simulate_rope::<2>(s)
+}
+
+pub fn part_2(s: &str) -> usize {
+    simulate_rope::<10>(s)
 }
 
 #[test]
@@ -129,14 +148,39 @@ R 2";
 }
 
 #[test]
+fn test_part_2_example_1() {
+    let input = "R 4
+U 4
+L 3
+D 1
+R 4
+D 1
+L 5
+R 2";
+    assert_eq!(part_2(input), 1);
+}
+
+#[test]
+fn test_part_2_example_2() {
+    let input = "R 5
+U 8
+L 8
+D 3
+R 17
+D 10
+L 25
+U 20";
+    assert_eq!(part_2(input), 36);
+}
+
+#[test]
 fn test_part_1() {
     let input = include_str!("../input/2022/day9.txt");
     assert_eq!(part_1(input), 6384);
 }
-/*
+
 #[test]
 fn test_part_2() {
     let input = include_str!("../input/2022/day9.txt");
-    assert_eq!(part_2(input), );
+    assert_eq!(part_2(input), 2734);
 }
-*/
