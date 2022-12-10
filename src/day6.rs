@@ -1,6 +1,6 @@
 fn all_distinct(window: &[u8]) -> bool {
     for i in 0..window.len() {
-        for j in (i+1)..window.len() {
+        for j in (i + 1)..window.len() {
             if window[i] == window[j] {
                 return false;
             }
@@ -13,12 +13,11 @@ fn find_marker(s: &str, size: usize) -> usize {
     s.as_bytes()
         .windows(size)
         .enumerate()
-        .filter(|(_, window)| {
-            all_distinct(window)
-        })
+        .filter(|(_, window)| all_distinct(window))
         .next()
         .unwrap()
-        .0 + size
+        .0
+        + size
 }
 
 pub fn part_1(s: &str) -> usize {
