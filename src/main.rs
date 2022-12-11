@@ -3,6 +3,7 @@
 #![feature(array_windows)]
 
 mod day1;
+mod day10;
 mod day2;
 mod day3;
 mod day4;
@@ -23,4 +24,5 @@ aoc_main::main! {
     day7 => part_1, part_2;
     day8 => part_1, part_2;
     day9 => part_1, part_2;
+    day10 => part_1;
 }
