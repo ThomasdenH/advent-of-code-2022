@@ -44,8 +44,8 @@ const MAX_ITEMS: usize = 32;
 fn parse_monkeys<const AMOUNT: usize>(s: &str) -> [(Monkey, ArrayVec<u32, MAX_ITEMS>); AMOUNT] {
     let mut bytes = s.as_bytes().iter().copied();
     core::array::from_fn::<_, AMOUNT, _>(move |_| {
-        bytes.advance_by("Monkey _:\n".len());
-        bytes.advance_by("  Starting items: ".len());
+        bytes.advance_by("Monkey _:\n".len()).unwrap();
+        bytes.advance_by("  Starting items: ".len()).unwrap();
         let mut numbers = ArrayVec::new();
         loop {
             numbers.push(util::read_two_digit_number(&mut bytes).into());
@@ -55,13 +55,13 @@ fn parse_monkeys<const AMOUNT: usize>(s: &str) -> [(Monkey, ArrayVec<u32, MAX_IT
                 break;
             }
         }
-        bytes.advance_by("  Operation: new = old ".len());
+        bytes.advance_by("  Operation: new = old ".len()).unwrap();
         let operation = match bytes.next().unwrap() {
             b'*' => {
                 bytes.next();
                 let mut num = bytes.next().unwrap();
                 if num == b'o' {
-                    bytes.advance_by("ld\n".len());
+                    bytes.advance_by("ld\n".len()).unwrap();
                     Operation::Square
                 } else {
                     num &= 0b1111;
@@ -81,11 +81,15 @@ fn parse_monkeys<const AMOUNT: usize>(s: &str) -> [(Monkey, ArrayVec<u32, MAX_IT
             }
             _ => unreachable!(),
         };
-        bytes.advance_by("  Test: divisible by ".len());
+        bytes.advance_by("  Test: divisible by ".len()).unwrap();
         let test = Test(util::read_number_one_or_two_digits(&mut bytes).into());
-        bytes.advance_by("    If true: throw to monkey ".len());
+        bytes
+            .advance_by("    If true: throw to monkey ".len())
+            .unwrap();
         let true_monkey = bytes.next().unwrap() & 0b1111;
-        bytes.advance_by("\n    If false: throw to monkey ".len());
+        bytes
+            .advance_by("\n    If false: throw to monkey ".len())
+            .unwrap();
         let false_monkey = bytes.next().unwrap() & 0b1111;
         let monkey_condition = [false_monkey.into(), true_monkey.into()];
         bytes.next();
@@ -111,12 +115,14 @@ fn part_1_generic<const MONKEY_COUNT: usize>(s: &str) -> usize {
     let mut monkeys: [_; MONKEY_COUNT] = parse_monkeys(s);
     let mut inspections = [0usize; MONKEY_COUNT];
     for _ in 0..PART_ONE_ROUNDS {
-        for i in 0..monkeys.len() {
+        for (monkey_index, inspection_count) in
+            inspections.iter_mut().enumerate().take(monkeys.len())
+        {
             while let Some((monkey, mut item)) = {
-                let (monkey, items) = monkeys.get_mut(i).unwrap();
+                let (monkey, items) = monkeys.get_mut(monkey_index).unwrap();
                 items.pop_at(0).map(|item| (monkey, item))
             } {
-                inspections[i] += 1;
+                *inspection_count += 1;
                 monkey.operation.apply(&mut item);
                 if monkey.test.test(item) {
                     monkeys[monkey.monkey_condition[1]].1.push(item);
