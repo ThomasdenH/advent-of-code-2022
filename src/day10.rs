@@ -1,3 +1,34 @@
+use std::fmt::Display;
+
+const CRT_SIZE: usize = 240;
+pub struct Crt([bool; CRT_SIZE]);
+
+impl Display for Crt {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for y in 0..6 {
+            for x in 0..40 {
+                if self.0[x + y * 40] {
+                    write!(f, "#")?;
+                } else {
+                    write!(f, ".")?;
+                }
+            }
+            writeln!(f)?;
+        }
+        Ok(())
+    }
+}
+
+impl<I: Iterator<Item = bool>> From<I> for Crt {
+    fn from(iter: I) -> Self {
+        let mut arr = [false; CRT_SIZE];
+        for (arr_entry, val) in arr.iter_mut().zip(iter) {
+            *arr_entry = val;
+        }
+        Crt(arr)
+    }
+}
+
 #[derive(Debug)]
 enum Instruction {
     Noop,
@@ -16,6 +47,10 @@ impl Default for Cpu {
 }
 
 impl Cpu {
+    fn register(self) -> i8 {
+        self.x
+    }
+
     /// Execute instruction. Returns how many instructions it took.
     fn execute_instruction(&mut self, inst: Instruction) -> usize {
         match inst {
@@ -69,16 +104,23 @@ fn parse_instructions(s: &str) -> impl Iterator<Item = Instruction> + '_ {
 
 pub fn part_1(s: &str) -> isize {
     Cpu::default()
-        .execute_all_cycles(parse_instructions(s).inspect(|inst| {
-            dbg!(inst);
-        }))
-        .map(|cpu| cpu.x)
+        .execute_all_cycles(parse_instructions(s))
+        .map(Cpu::register)
         .enumerate()
         .skip(19)
         .step_by(40)
         .take(6)
         .map(|(cycle, val)| (cycle + 1) as isize * isize::from(val))
         .sum()
+}
+
+pub fn part_2(s: &str) -> Crt {
+    Cpu::default()
+        .execute_all_cycles(parse_instructions(s))
+        .map(Cpu::register)
+        .zip((0i8..40).cycle())
+        .map(|(value, crt_index)| value <= crt_index + 1 && value + 1 >= crt_index)
+        .into()
 }
 
 #[test]
@@ -88,14 +130,13 @@ addx 3
 addx -5";
     let cycles: Vec<_> = Cpu::default()
         .execute_all_cycles(parse_instructions(input))
-        .map(|cpu| cpu.x)
+        .map(Cpu::register)
         .collect();
     assert_eq!(cycles, vec![1, 1, 1, 4, 4, -1])
 }
 
-#[test]
-fn test_part_1_example() {
-    let input = "addx 15
+#[cfg(test)]
+const EXAMPLE_INPUT: &str = "addx 15
 addx -11
 addx 6
 addx -3
@@ -241,7 +282,25 @@ addx -11
 noop
 noop
 noop";
-    assert_eq!(part_1(input), 13140);
+
+#[test]
+fn test_part_1_example() {
+    assert_eq!(part_1(EXAMPLE_INPUT), 13140);
+}
+
+#[test]
+fn test_part_2_example() {
+    assert_eq!(
+        part_2(EXAMPLE_INPUT).to_string(),
+        "\
+##..##..##..##..##..##..##..##..##..##..
+###...###...###...###...###...###...###.
+####....####....####....####....####....
+#####.....#####.....#####.....#####.....
+######......######......######......####
+#######.......#######.......#######.....
+"
+    );
 }
 
 #[test]
@@ -250,10 +309,18 @@ fn test_part_1() {
     assert_eq!(part_1(input), 13680);
 }
 
-/*
 #[test]
 fn test_part_2() {
-    let input = include_str!("../input/2022/day9.txt");
-    assert_eq!(part_2(input), 2734);
+    let input = include_str!("../input/2022/day10.txt");
+    assert_eq!(
+        part_2(input).to_string(),
+        "\
+###..####..##..###..#..#.###..####.###..
+#..#....#.#..#.#..#.#.#..#..#.#....#..#.
+#..#...#..#....#..#.##...#..#.###..###..
+###...#...#.##.###..#.#..###..#....#..#.
+#....#....#..#.#....#.#..#....#....#..#.
+#....####..###.#....#..#.#....####.###..
+"
+    );
 }
-*/
