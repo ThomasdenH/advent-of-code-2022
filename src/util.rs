@@ -1,4 +1,4 @@
-pub fn read_number_one_or_two_digits(mut bytes: impl Iterator<Item = u8>) -> u8 {
+pub fn read_number_one_or_two_digits(bytes: &mut impl Iterator<Item = u8>) -> u8 {
     let mut num = bytes.next().unwrap() & 0b1111;
     if let Some(other_number) = bytes.next() {
         if other_number != b'\n' {
@@ -10,6 +10,6 @@ pub fn read_number_one_or_two_digits(mut bytes: impl Iterator<Item = u8>) -> u8 
     num
 }
 
-pub fn read_two_digit_number(mut bytes: impl Iterator<Item = u8>) -> u8 {
+pub fn read_two_digit_number(bytes: &mut impl Iterator<Item = u8>) -> u8 {
     (bytes.next().unwrap() & 0b1111) * 10 + (bytes.next().unwrap() & 0b1111)
 }
