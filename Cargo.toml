@@ -9,6 +9,7 @@ edition = "2021"
 aoc-main = { git="https://github.com/remi-dupre/aoc.git", features = ["bench"]}
 primitive-types = "0.12.1"
 arrayvec = "0.7.2"
+memchr = "2.5.0"
 
 [profile.release]
 lto = true
