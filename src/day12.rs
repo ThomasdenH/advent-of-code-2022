@@ -58,20 +58,6 @@ fn breadth_first_search<const WIDTH: usize, const TOTAL_SIZE: usize>(
             if let Some(&to_value) = grid.get(new_pos) {
                 if !visited[new_pos] {
                     if is_walk_possible(value, to_value) {
-                        /*println!("__{}__", score);
-                        for i in 0..TOTAL_SIZE {
-                            if i % WIDTH == 0 {
-                                println!();
-                            }
-                            if i == pos {
-                                print!("F");
-                            } else if i == new_pos {
-                                print!("T");
-                            } else {
-                                print!("{}", if visited[i] { '.' } else { '?' });
-                            }
-                        }
-                        println!("\n____");*/
                         heap.push(HeapEntry {
                             pos: new_pos,
                             score: score + 1,
