@@ -1,4 +1,4 @@
-use std::cmp::Ordering;
+use std::{cmp::Ordering, num::NonZeroU8};
 
 fn compare(a: &[u8], b: &[u8]) -> Ordering {
     let mut it_a = a.iter().copied().peekable();
@@ -83,6 +83,75 @@ fn compare(a: &[u8], b: &[u8]) -> Ordering {
             }
         }
     }
+}
+
+/// Map b"10" to a single-byte: b'9' + 1.
+fn integer_combiner<'a>(it: &'a mut impl Iterator<Item = u8>) -> impl Iterator<Item = u8> + 'a {
+    std::iter::from_fn(move || {
+        it.next()
+            .map(|d| if d == b'1' {
+                it.next()
+                    .map(|d2| if d2 == b'0' {
+                        b'9' + 1
+                    } else {
+                        d2
+                    })
+                    .unwrap()
+            } else {
+                d
+            })
+    })
+}
+
+struct BracketEmulator<I: Iterator<Item = u8>> {
+    brackets: u8,
+    bracket_current: u8,
+    first_integer: Option<NonZeroU8>,
+    it: I
+}
+
+impl<I: Iterator<Item = u8>> From<I> for BracketEmulator<I> {
+    fn from(it: I) -> Self {
+        BracketEmulator { brackets: 0, bracket_current: 0, first_integer: None, it }
+    }
+}
+
+impl<I: Iterator<Item = u8>> BracketEmulator<I> {
+    fn surround_first_integer_with_brackets(&mut self, integer: NonZeroU8) {
+        self.first_integer = Some(integer);
+        self.brackets += 1;
+    }
+
+    fn peek(&mut self) -> Option<>
+}
+
+impl<I: Iterator<Item = u8>> Iterator for BracketEmulator<I> {
+    type Item = u8;
+    fn next(&mut self) -> Option<Self::Item> {
+        if let Some(first_integer) = self.first_integer {
+            if self.brackets != self.bracket_current {
+                debug_assert!(self.brackets > self.bracket_current);
+                self.bracket_current += 1;
+                Some(b'[')
+            } else {
+                self.brackets = 0;
+                self.first_integer.take().map(u8::from)
+            }
+        } else if self.bracket_current != 0 {
+            self.bracket_current -= 1;
+            Some(b']')
+        } else {
+            self.it.next()
+        }
+    }
+}
+
+pub fn order(it1: impl Iterator<Item = u8>, it2: impl Iterator<Item = u8>) -> impl Iterator<Item = u8> {
+    let mut it1 = integer_combiner(&mut it1);
+    let mut it2 = integer_combiner(&mut it2);
+    let mut it1 = BracketEmulator::from(it1);
+    let mut it2 = BracketEmulator::from(it2);
+    for 
 }
 
 #[test]
