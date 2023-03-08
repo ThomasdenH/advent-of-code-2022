@@ -37,6 +37,7 @@ fn breadth_first_search<const WIDTH: usize, const TOTAL_SIZE: usize>(
     starting_positions: impl Iterator<Item = usize>,
 ) -> usize {
     let grid = s.as_bytes();
+    assert_eq!(grid.len(), TOTAL_SIZE);
     let mut visited = [false; TOTAL_SIZE];
     let mut heap: BinaryHeap<_> = starting_positions
         .map(|pos| HeapEntry {
@@ -58,20 +59,6 @@ fn breadth_first_search<const WIDTH: usize, const TOTAL_SIZE: usize>(
             if let Some(&to_value) = grid.get(new_pos) {
                 if !visited[new_pos] {
                     if is_walk_possible(value, to_value) {
-                        /*println!("__{}__", score);
-                        for i in 0..TOTAL_SIZE {
-                            if i % WIDTH == 0 {
-                                println!();
-                            }
-                            if i == pos {
-                                print!("F");
-                            } else if i == new_pos {
-                                print!("T");
-                            } else {
-                                print!("{}", if visited[i] { '.' } else { '?' });
-                            }
-                        }
-                        println!("\n____");*/
                         heap.push(HeapEntry {
                             pos: new_pos,
                             score: score + 1,
@@ -96,11 +83,11 @@ pub fn part_2_generic<const WIDTH: usize, const TOTAL_SIZE: usize>(s: &str) -> u
 }
 
 pub fn part_1(s: &str) -> usize {
-    part_1_generic::<162, 6642>(s)
+    part_1_generic::<162, 6641>(s)
 }
 
 pub fn part_2(s: &str) -> usize {
-    part_2_generic::<162, 6642>(s)
+    part_2_generic::<162, 6641>(s)
 }
 
 #[test]
